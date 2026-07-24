@@ -20,6 +20,7 @@ drafts tailored bullets, and refines them via chat.
   browser's localStorage only, never sent anywhere except api.anthropic.com
 - Data sources: jobright-ai open-source job repos (star them — they do the daily heavy lifting)
 
+
 ## Stack
 
 React 18 + Vite + Recharts · Claude Sonnet via Anthropic API · localStorage persistence
