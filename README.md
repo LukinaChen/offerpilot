@@ -5,7 +5,7 @@ Aggregates fresh postings daily from open-source job repos, tracks a 6-stage pip
 and (with your own Anthropic API key) scores resume-JD fit, checks ATS keywords,
 drafts tailored bullets, and refines them via chat.
 
-**Live demo:** (add your Vercel URL here)
+**Live demo:** offerpilot-beryl-beta.vercel.app
 
 ## Deploy in 15 minutes
 
