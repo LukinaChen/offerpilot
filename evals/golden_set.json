@@ -1,0 +1,170 @@
+{
+ "resume_name": "Alex Sample (public demo resume)",
+ "resume": "# ALEX SAMPLE\nProduct Manager | alex@example.com\nSUMMARY: PM with experience in lifecycle growth, CRM workflows, and AI product building. MS student.\nEXPERIENCE:\nProduct Manager Intern | Acme Corp (Jun-Sep 2025): Led discovery and launch of a customer onboarding flow, lifting activation 12%. Wrote PRDs, coordinated UAT across design and engineering.\nGrowth Associate | Example Inc (Jul 2023-May 2025): Ran lifecycle email campaigns for 50K users; improved conversion 8% via A/B testing; built audience segmentation and retention reporting.\nPROJECTS: Built an AI job-search tool with Claude API (structured outputs, prompt guardrails); hackathon sentiment-analysis dashboard (3rd place).\nSKILLS: PRD Writing, User Research, A/B Testing, SQL basics, Figma, Data Analysis, LLMs, Claude API, Python",
+ "pairs": [
+  {
+   "id": "jobright-pm-intern",
+   "company": "Jobright",
+   "title": "Product Manager Intern (Remote)",
+   "expect_band": [
+    65,
+    85
+   ],
+   "expect_must": [
+    "pursuing degree",
+    "communication",
+    "ambiguous problems",
+    "AI interest",
+    "remote collaboration"
+   ],
+   "jd": "Remote PM Intern at AI job-search startup. Conduct user and market research to identify product opportunities. Translate user problems into requirements and priorities. Write product briefs, user stories, acceptance criteria. Partner with engineering and design. Define success metrics and analyze feature performance. Required: pursuing degree in Business/CS/Engineering/Economics; strong analytical, writing, communication skills; break down ambiguous problems; genuine interest in AI products; work independently in remote team. Preferred: product/startup experience; user research, product analytics, SQL, experimentation; Figma; interest in LLMs, AI agents, career technology."
+  },
+  {
+   "id": "databricks-apm",
+   "company": "Databricks",
+   "title": "Associate Product Manager 2027",
+   "expect_band": [
+    55,
+    75
+   ],
+   "expect_must": [
+    "graduate Fall 2026/Spring 2027",
+    "CS or related degree",
+    "AI tooling",
+    "SQL or Python",
+    "analytical"
+   ],
+   "jd": "APM 2027 cohort at data+AI infrastructure platform. Understand customer problem space, prototype and test early ideas, ship features, own project end-to-end, build with scale/quality/security in mind. Looking for: graduating Fall 2026 or Spring 2027 with bachelors/masters in computer science or related engineering; used AI tooling for productivity and development; first-hand experience with SQL and/or Python; hands-on, learn by doing; analytical data-driven decisions; communicate nuance to engineers and customers; solve ambiguous problems; stay curious."
+  },
+  {
+   "id": "tiktok-search-eval",
+   "company": "TikTok",
+   "title": "PM, Search AI Evaluation",
+   "expect_band": [
+    60,
+    80
+   ],
+   "expect_must": [
+    "bachelor's degree",
+    "interest in LLM",
+    "project management",
+    "communication"
+   ],
+   "jd": "Build and refine evaluation framework for TikTok's AI-powered search. Lead development of AI search evaluation framework; leverage user research and data analysis; define experience quality goals; drive cross-functional collaboration across algorithm, product, evaluation operations; build evaluation knowledge base; explore LLM application to improve evaluation efficiency. Minimum: Bachelor's or above; strong interest in LLM technology and search products; prior relevant experience a plus; solid project management skills; clear communicator; fast-paced environment; eager to grow in AI product space."
+  },
+  {
+   "id": "tiktok-ai-service",
+   "company": "TikTok",
+   "title": "PM, AI Service Experience",
+   "expect_band": [
+    40,
+    60
+   ],
+   "expect_must": [
+    "3+ years PM",
+    "LLM product launch track record",
+    "analytical",
+    "cross-functional"
+   ],
+   "jd": "Lead product planning, requirement breakdown, prototyping, PRD creation for global AI-driven service experience. Drive iteration of Chatbots and LLM-assisted tools for merchants. Leverage LLMs to enhance chatbot interactions. Data-driven decisions with CSAT metrics. Minimum: 3+ years as PM with proven track record launching LLM-related products; deep understanding of model capabilities; strong product sense; highly analytical; excellent cross-functional communication and project management."
+  },
+  {
+   "id": "gemini-data-pm",
+   "company": "Gemini",
+   "title": "PM Intern, Data (Fall)",
+   "expect_band": [
+    50,
+    70
+   ],
+   "expect_must": [
+    "pursuing degree",
+    "data analysis foundation",
+    "communication",
+    "in-person NYC"
+   ],
+   "jd": "Crypto platform PM intern on Data team, in person 3 days/week NYC. Be AI-first; be data-driven: quantitative and qualitative user research, competitive research, pulling data from Databricks; support full project lifecycle: PRDs, UAT, release planning; build cross-functional alignment; ship features and track metrics. Minimum: pursuing Bachelor's/Master's in CS, Interactive Design, Business or related; outstanding communication; bias for moving fast; structured problem-solver; user-focused builder; foundation in data analysis. Preferred: technical fluency; hands-on internship/startup/hackathon experience; crypto interest."
+  },
+  {
+   "id": "futureself-pjm",
+   "company": "FutureSelf",
+   "title": "Project Management Intern",
+   "expect_band": [
+    70,
+    90
+   ],
+   "expect_must": [
+    "organized detail-oriented",
+    "proactive",
+    "written communication",
+    "Notion",
+    "multiple tasks"
+   ],
+   "jd": "Remote 3-month internship at neuroscience wellness startup. Organize and maintain Notion workspace; track tasks, deadlines, progress across projects; keep communication organized with advisors, investors, partners; assist with pitch decks; help organize social media content; support general operations. Looking for: very organized and detail-oriented; proactive, takes initiative; strong written communication; comfortable with Notion; structured; interested in startups, psychology, wellness, AI; reliable, manage multiple tasks."
+  },
+  {
+   "id": "tiktok-agency-ops",
+   "company": "TikTok",
+   "title": "Product Strategy & Ops Manager, Agency",
+   "expect_band": [
+    30,
+    50
+   ],
+   "expect_must": [
+    "3+ years",
+    "performance advertising/paid media",
+    "ad tech industry",
+    "GTM execution",
+    "AI tools"
+   ],
+   "jd": "Develop product strategy for North America Agency business; lead GTM strategy and operations; capture agency pain points to influence roadmap. Minimum: 3+ years, background in performance advertising or paid media preferably agency environment; understanding of digital marketing business models; experience influencing product roadmap with advertising products; ad tech/media industry experience; end-to-end GTM planning for advertising products; strategy + quantitative analysis; demonstrated ability to leverage AI tools (LLMs) for automations and refined output. Preferred: SQL; commercial mindset; AI-accelerated analysis and playbooks."
+  },
+  {
+   "id": "tiktok-creator-ops",
+   "company": "TikTok",
+   "title": "Product Strategy & Operation Manager, Creator",
+   "expect_band": [
+    55,
+    75
+   ],
+   "expect_must": [
+    "2+ years product ops/GTM/PM",
+    "ecommerce marketplace experience",
+    "merchandising understanding"
+   ],
+   "jd": "Work with PMs, R&D, business operations to ensure adoption of ecommerce platform by users, merchants, creators. Define global creator product and operation strategy; co-own creator business goals; define market-specific product strategy; drive go-to-market strategies for Creator and Affiliate products. Minimum: 2+ years in product operations, GTM, or product management; strong ecommerce marketplace product or operation experience; understanding of merchandising strategy; knowledge of creator ecosystem preferred. Preferred: live streaming tools experience."
+  },
+  {
+   "id": "veeva-crm-apm",
+   "company": "Veeva",
+   "title": "Associate Product Manager, CRM Suite",
+   "expect_band": [
+    65,
+    85
+   ],
+   "expect_must": [
+    "early career/new grad",
+    "interest in product management",
+    "communication",
+    "analytical"
+   ],
+   "jd": "Associate PM new-grad program for Vault CRM Suite, enterprise software for life sciences. Learn product management fundamentals; work with engineering on feature definition; gather customer feedback; write requirements; support releases and iterations. Looking for: recent graduate or early career; strong interest in product management and enterprise software; excellent communication; analytical thinking; ability to learn quickly; collaborative."
+  },
+  {
+   "id": "hypothesis-growth",
+   "company": "Hypothesis",
+   "title": "Content & Growth (fintech, unpaid)",
+   "expect_band": [
+    25,
+    45
+   ],
+   "expect_must": [
+    "audience building track record",
+    "AI-fluent",
+    "growth experiments",
+    "content creation"
+   ],
+   "jd": "Own content and growth end-to-end for AI-native retail investing platform. Content creation across TikTok, Instagram, Substack: short-form video, graphics, threads, memes daily. Growth experiments: waitlist conversion, referral loops, viral mechanics, influencer outreach. Looking for: builder of audiences — grown a TikTok/IG/X/Substack/YouTube to a real number with posts you can point to; AI-fluent with a stack and opinions; growth hacker mindset — funnels, loops, experiments; consumer/startup experience; interest in markets; taste."
+  }
+ ],
+ "labels_note": "expect_band and expect_must are human labels (golden). Bands reflect the demo resume's fit, not any specific individual."
+}
