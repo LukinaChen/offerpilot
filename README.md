@@ -8,6 +8,10 @@ Built from a real pain point (my own job search), iterated daily from real usage
 
 ---
 
+## How to use
+
+Open the [live site](https://offerpilot-beryl-beta.vercel.app) — job tracking works instantly, no signup. For a module-by-module guide (search tricks, pipeline stages, Resume Lab flow, backups), press the **⋯ → ❓ How to use** menu inside the app. Since all data lives in your browser, use **⋯ → Export backup** before switching devices.
+
 ## Product Architecture
 
 ```mermaid
