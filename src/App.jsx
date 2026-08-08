@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-// OFFERPILOT_VERSION: v0.3.1 (8 sources + TodayPicks + rejected + backup + auto-fetch)
+// OFFERPILOT_VERSION: v0.3.3 (v0.3.1 + lookup-mode search + in-app help guide)
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Tooltip, CartesianGrid } from "recharts";
 
 const I18N = {
@@ -36,6 +36,7 @@ const I18N = {
     myPortfolio: "作品集（UX/PD 投递用）", portfolioHint: "粘贴项目简介（推荐）或作品集网址；保存一次反复使用", portfolioPlaceholder: "项目1: 智能家居App重设计, 负责端到端流程...\n或 https://yourportfolio.com",
     ftLabel: "全职", internLabel: "实习",
     picksTitle: "今日必投", picksSub: "按你的赛道胜率自动排序 · 近48小时", pkOps: "Ops/PjM主仓", pkGrowth: "Growth/CRM本命", pkAI: "AI进攻线", pkLocal: "🏠西雅图本地", pkRemote: "Remote", pkToday: "今日新发",
+    menuHelp: "使用指南", menuExport: "导出备份", menuImport: "导入备份",
     exportTip: "导出备份（不含API Key）", importTip: "导入备份", importOk: "导入成功，即将刷新", importBad: "文件格式不对，请选择 OfferPilot 导出的备份文件",
     aiAsks: "AI 想问你", aiAsksHint: "在下方对话框里回答，AI 会把你的补充事实织进改写",
     refineTitle: "对话微调", refineHint: "不认可某条改写？直接说。有报告没问到的经历？在这里补充，AI 会给出融合后的新版本（不超原句长度+10%）。",
@@ -85,6 +86,7 @@ const I18N = {
     myPortfolio: "Portfolio (for UX/PD roles)", portfolioHint: "Paste project summaries (recommended) or portfolio URL; saved for reuse", portfolioPlaceholder: "Project 1: Smart home app redesign, end-to-end...\nor https://yourportfolio.com",
     ftLabel: "Full-time", internLabel: "Intern",
     picksTitle: "Today's Picks", picksSub: "Ranked by your lane strategy · last 48h", pkOps: "Ops/PjM", pkGrowth: "Growth/CRM", pkAI: "AI lane", pkLocal: "🏠Seattle local", pkRemote: "Remote", pkToday: "New today",
+    menuHelp: "How to use", menuExport: "Export backup", menuImport: "Import backup",
     exportTip: "Export backup (API key excluded)", importTip: "Import backup", importOk: "Imported — reloading", importBad: "Invalid file — choose an OfferPilot backup",
     aiAsks: "AI asks you", aiAsksHint: "Answer in the chat below — new facts get woven into revised bullets",
     refineTitle: "Refine via chat", refineHint: "Disagree with a rewrite? Say so. Have experience the report didn't ask about? Add it here — you'll get a merged version (max +10% length).",
@@ -264,6 +266,8 @@ export default function OfferPilot() {
   const [loaded,setLoaded]=useState(false);
   const [refreshing,setRefreshing]=useState(false);
   const [refreshMsg,setRefreshMsg]=useState("");
+  const [showHelp,setShowHelp]=useState(false);
+  const [showMenu,setShowMenu]=useState(false);
   const t=I18N[lang];
 
   useEffect(()=>{(async()=>{
@@ -288,13 +292,14 @@ export default function OfferPilot() {
 
   const WINDOW_DAYS={ "24h":1, "7d":7, "30d":30, "all":99999 };
   const filtered=jobs.filter(j=>{
+    // 查档模式: 搜索时绕过所有过滤器, 在全库中查找 (含已投递/已拒/任何时间)
+    if(filter.search){const s=filter.search.toLowerCase();return j.title.toLowerCase().includes(s)||j.company.toLowerCase().includes(s)||j.location.toLowerCase().includes(s);}
     if(filter.type!=="all"&&j.type!==filter.type)return false;
     if(j.jobType==="intern"&&seasonBlocked(j.title,"intern"))return false;
     if(filter.jobType!=="all"&&(j.jobType||"fulltime")!==filter.jobType)return false;
     if(filter.h1bOnly&&j.h1b!=="likely")return false;
     const age=Math.floor((new Date()-new Date(j.posted))/864e5);
     if(j.stage==="saved" && age>WINDOW_DAYS[filter.window])return false;
-    if(filter.search){const s=filter.search.toLowerCase();if(!(j.title.toLowerCase().includes(s)||j.company.toLowerCase().includes(s)||j.location.toLowerCase().includes(s)))return false;}
     return true;
   }).sort((a,b)=>b.posted.localeCompare(a.posted));
 
@@ -371,27 +376,45 @@ export default function OfferPilot() {
           <input placeholder={t.searchPlaceholder} value={filter.search} onChange={e => setFilter(f => ({ ...f, search: e.target.value }))}
             style={{ padding: "9px 20px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.45)", backdropFilter: "blur(10px)", fontSize: 13, width: 200, outline: "none", color: "#2C2C3A" }} />
           {/* Lang */}
-          <button onClick={async () => {
-            const keys = ["op2-data","op2-lang","op2-resumes","op2-active-resume","op2-portfolio","op2-reports"];
-            const dump = {};
-            for (const k of keys) { try { const r = await window.storage.get(k); if (r?.value) dump[k] = r.value; } catch {} }
-            const blob = new Blob([JSON.stringify({ app: "offerpilot", exported: new Date().toISOString(), data: dump })], { type: "application/json" });
-            const a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = `offerpilot-backup-${new Date().toISOString().split("T")[0]}.json`;
-            a.click(); URL.revokeObjectURL(a.href);
-          }} title={t.exportTip} style={{ padding: "8px 14px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.45)", fontSize: 12, cursor: "pointer", color: "#5A5A6E", backdropFilter: "blur(8px)" }}>⤓</button>
-          <label title={t.importTip} style={{ padding: "8px 14px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.45)", fontSize: 12, cursor: "pointer", color: "#5A5A6E", backdropFilter: "blur(8px)" }}>⤒
-            <input type="file" accept=".json" style={{ display: "none" }} onChange={async e => {
-              const f = e.target.files && e.target.files[0]; if (!f) return;
-              try {
-                const parsed = JSON.parse(await f.text());
-                if (parsed.app !== "offerpilot" || !parsed.data) { alert(t.importBad); return; }
-                for (const [k, v] of Object.entries(parsed.data)) { try { await window.storage.set(k, v); } catch {} }
-                alert(t.importOk); location.reload();
-              } catch { alert(t.importBad); }
-            }} />
-          </label>
+          <div style={{ position: "relative" }}>
+            <button onClick={() => setShowMenu(m => !m)} style={{ padding: "8px 16px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.5)", background: showMenu ? "#fff" : "rgba(255,255,255,0.45)", fontSize: 14, cursor: "pointer", color: "#5A5A6E", backdropFilter: "blur(8px)", fontWeight: 700 }}>⋯</button>
+            {showMenu && (
+              <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "rgba(252,252,254,0.98)", borderRadius: 16, boxShadow: "0 12px 40px rgba(0,0,0,0.14)", padding: 6, minWidth: 180, zIndex: 500 }}>
+                <button onClick={() => { setShowMenu(false); setShowHelp(true); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", border: "none", background: "none", borderRadius: 10, fontSize: 12.5, color: "#2C2C3A", cursor: "pointer", textAlign: "left" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,0.04)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                  ❓ {t.menuHelp}
+                </button>
+                <button onClick={async () => {
+                  setShowMenu(false);
+                  const keys = ["op2-data","op2-lang","op2-resumes","op2-active-resume","op2-portfolio","op2-reports"];
+                  const dump = {};
+                  for (const k of keys) { try { const r = await window.storage.get(k); if (r?.value) dump[k] = r.value; } catch {} }
+                  const blob = new Blob([JSON.stringify({ app: "offerpilot", exported: new Date().toISOString(), data: dump })], { type: "application/json" });
+                  const a = document.createElement("a");
+                  a.href = URL.createObjectURL(blob);
+                  a.download = `offerpilot-backup-${new Date().toISOString().split("T")[0]}.json`;
+                  a.click(); URL.revokeObjectURL(a.href);
+                }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", border: "none", background: "none", borderRadius: 10, fontSize: 12.5, color: "#2C2C3A", cursor: "pointer", textAlign: "left" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,0.04)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                  ⤓ {t.menuExport}
+                </button>
+                <label style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", borderRadius: 10, fontSize: 12.5, color: "#2C2C3A", cursor: "pointer", boxSizing: "border-box" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,0.04)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                  ⤒ {t.menuImport}
+                  <input type="file" accept=".json" style={{ display: "none" }} onChange={async e => {
+                    setShowMenu(false);
+                    const f = e.target.files && e.target.files[0]; if (!f) return;
+                    try {
+                      const parsed = JSON.parse(await f.text());
+                      if (parsed.app !== "offerpilot" || !parsed.data) { alert(t.importBad); return; }
+                      for (const [k, v] of Object.entries(parsed.data)) { try { await window.storage.set(k, v); } catch {} }
+                      alert(t.importOk); location.reload();
+                    } catch { alert(t.importBad); }
+                  }} />
+                </label>
+              </div>
+            )}
+          </div>
           <div style={{ display: "flex", background: "rgba(255,255,255,0.4)", borderRadius: 999, padding: 3, backdropFilter: "blur(8px)" }}>
             {["zh", "en"].map(l => (
               <button key={l} onClick={() => setLang(l)} style={{
@@ -429,6 +452,7 @@ export default function OfferPilot() {
         {view === "channels" && <Channels t={t} lang={lang} />}
       </div>
 
+      {showHelp && <HelpModal lang={lang} onClose={() => setShowHelp(false)} />}
       {showAdd && <JobModal t={t} onSave={j => { setJobs(p => [{ ...j, id: Date.now().toString() }, ...p]); setShowAdd(false); }} onClose={() => setShowAdd(false)} />}
       {editJob && <JobModal t={t} job={editJob} onSave={u => { setJobs(p => p.map(j => j.id === u.id ? u : j)); setEditJob(null); }} onDelete={id => { setJobs(p => p.filter(j => j.id !== id)); setEditJob(null); }} onClose={() => setEditJob(null)} />}
 
@@ -510,6 +534,49 @@ function scorePick(j, t) {
   // 全职优先 (毕业前主战场)
   if (j.jobType === "fulltime") score += 5;
   return { score, why };
+}
+
+
+// ===== 使用指南 =====
+const HELP = {
+  zh: [
+    ["🔍 搜索框（查档模式）", "输入任意连续字符即可匹配公司名、职位名或地点（如输入 veev 找 Veeva）。搜索时自动忽略所有筛选器和时间窗口，在全部数据中查找——包括你已投递、已拒的历史岗位。想确认某公司投过没有：直接搜名字，看阶段列。"],
+    ["📥 岗位页", "每天自动从8个开源仓库抓取新岗位（打开网站自动刷新，1小时冷却）。默认显示24小时内新发；筛选器：时间窗口 / 全职·实习 / 🌱只看H1B友好 / 五类岗位标签。已过滤：Senior岗、TPM、仅限美国公民、猎头、超出资格窗口的实习。"],
+    ["📌 今日必投", "概览页顶部，按赛道胜率自动为近48小时新岗打分排序（Ops/PjM > Growth/CRM > AI > 其他），叠加本地、H1B、新发加分。点击条目直接编辑，↗ 直达申请页。"],
+    ["🗂 看板", "七阶段管道：收藏→已投递→求内推→获内推→面试中→Offer / 已拒。拖不了卡片时用岗位行的下拉框改阶段。手动添加的岗位（右下角+）与抓取岗位完全同权：一样计入统计、漏斗和趋势图。"],
+    ["🤖 简历工坊", "上传简历（.md/.txt）→ 贴JD（公司职位自动识别）→ 🎯帮我选简历 → 生成报告：匹配分、ATS关键词、persona解码、带保护规则的bullet改写、AI反问。不满意就在报告下方对话微调；改完简历用同一JD重测看分数变化。需要自己的 Anthropic API Key（只存本机浏览器）。"],
+    ["🚄 直通车", "大厂官方校招入口合集（APM项目、设计、硬件、Startup平台）——Amazon/Google 这类只发自家官网的岗位走这里+LinkedIn alert，不经过抓取管道。"],
+    ["💾 数据与隐私", "所有数据（简历、看板、报告、Key）只存在你自己浏览器的 localStorage，不上传任何服务器。⤓ 导出JSON备份（不含Key），⤒ 导入恢复。换电脑/清缓存前记得先导出。"],
+  ],
+  en: [
+    ["🔍 Search (lookup mode)", "Type any contiguous characters to match company, title, or location (e.g. 'veev' finds Veeva). Search bypasses all filters and time windows — it looks through your entire library including applied and rejected jobs. To check if you've applied somewhere: search the name, read the stage column."],
+    ["📥 Jobs", "Auto-fetches daily from 8 open-source repos (on page load, 1h cooldown). Defaults to last 24h; filters: time window / full-time·intern / 🌱H1B-friendly / five role tags. Pre-filtered out: senior roles, TPM, citizens-only, staffing agencies, out-of-window internships."],
+    ["📌 Today's Picks", "Top of Overview — scores jobs from the last 48h by your lane strategy (Ops/PjM > Growth/CRM > AI > others) plus local, H1B, and freshness bonuses. Click to edit; ↗ opens the application page."],
+    ["🗂 Pipeline", "Seven stages: saved → applied → referral asked → secured → interview → offer / rejected. Change stages via the dropdown on each row. Manually added jobs (+ button) are first-class: counted in all stats, funnels, and trends."],
+    ["🤖 Resume Lab", "Upload resumes (.md/.txt) → paste a JD (company/title auto-detected) → 🎯 pick resume for me → get a report: match score, ATS keywords, persona decode, guarded bullet rewrites, elicitation questions. Refine via chat below the report; re-test after editing. Requires your own Anthropic API key (stored in your browser only)."],
+    ["🚄 Channels", "Official campus-recruiting portals (APM programs, design, hardware, startup platforms) — companies like Amazon/Google post only on their own sites; track them here + LinkedIn alerts."],
+    ["💾 Data & Privacy", "Everything (resumes, pipeline, reports, key) lives only in your browser's localStorage — nothing is uploaded anywhere. ⤓ exports a JSON backup (key excluded); ⤒ restores it. Export before switching devices or clearing cache."],
+  ],
+};
+
+function HelpModal({ lang, onClose }) {
+  const items = HELP[lang] || HELP.zh;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(30,30,40,0.35)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "rgba(252,252,254,0.98)", borderRadius: 24, padding: "28px 32px", maxWidth: 640, width: "100%", maxHeight: "82vh", overflowY: "auto", boxShadow: "0 24px 80px rgba(0,0,0,0.18)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div style={{ fontSize: 17, fontWeight: 800 }}>{lang === "zh" ? "使用指南" : "How to use OfferPilot"}</div>
+          <button onClick={onClose} style={{ border: "none", background: "rgba(0,0,0,0.05)", borderRadius: 999, width: 30, height: 30, cursor: "pointer", fontSize: 14 }}>✕</button>
+        </div>
+        {items.map(([h, body], i) => (
+          <div key={i} style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{h}</div>
+            <div style={{ fontSize: 12, color: "#5A5A6E", lineHeight: 1.7 }}>{body}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function TodayPicks({ jobs, t, setEditJob }) {
