@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-// OFFERPILOT_VERSION: v0.3.3 (v0.3.1 + lookup-mode search + in-app help guide)
+// OFFERPILOT_VERSION: v0.4.7 (editable posted date + separate application date) (v0.3.1 + lookup-mode search + in-app help guide)
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Tooltip, CartesianGrid } from "recharts";
 
 const I18N = {
@@ -36,6 +36,32 @@ const I18N = {
     myPortfolio: "作品集（UX/PD 投递用）", portfolioHint: "粘贴项目简介（推荐）或作品集网址；保存一次反复使用", portfolioPlaceholder: "项目1: 智能家居App重设计, 负责端到端流程...\n或 https://yourportfolio.com",
     ftLabel: "全职", internLabel: "实习",
     picksTitle: "今日必投", picksSub: "按你的赛道胜率自动排序 · 近48小时", pkOps: "Ops/PjM主仓", pkGrowth: "Growth/CRM本命", pkAI: "AI进攻线", pkLocal: "🏠西雅图本地", pkRemote: "Remote", pkToday: "今日新发",
+    interview: "面试",
+    ivStories: "故事工坊", ivBank: "题库", ivCards: "答案卡",
+    ivStoriesTitle: "每条简历bullet都该有一个能讲90秒的故事",
+    ivStoriesHint: "从你的简历库自动提取所有bullet。点击一条，写下你的故事草稿，AI按STAR完整性、重点聚焦（反流水账）、口述时长三道标准审查——绝不替你编内容，缺事实只会追问。⚪未开发 🟡草稿 🟢已打磨",
+    ivNoBullets: "简历库为空——先去简历工坊上传简历，bullet会自动出现在这里；或用上方输入框添加自定义故事",
+    ivCustomPh: "贴入一条简历bullet原文（或写一段想准备的经历，如失败、冲突故事），点＋创建", ivCustomAdd: "添加", ivCustomTag: "手动添加",
+    channelsSub: "官方校招入口",
+    ivDraftLabel: "你的故事草稿（中英文都可以，怎么讲就怎么写）",
+    ivDraftPh: "把这条bullet背后的故事写下来：当时什么情况、你的任务边界、你具体做了什么、结果如何…",
+    ivReview: "审查这个故事", ivReviewing: "审查中…",
+    ivMainPoint: "这个故事证明的核心能力", ivCuts: "建议删掉", ivPolished: "打磨版（≤90秒口述）",
+    ivMarkDone: "标记为已打磨", ivMarkDraft: "退回草稿",
+    ivAddQ: "添加题目", ivQCompany: "公司（选填）", ivQPh: "输入面试题（可一次粘贴多行，每行一题）。来源：JD分析预测、Claude帮你扫的面经、面试后回忆",
+    ivBankEmpty: "题库为空。来源：简历工坊JD分析的预测面试题、面经搜集、真实面试后的回忆",
+    ivBankFlow: "面经搜集工作流：把「公司＋岗位＋轮次」发给 Claude 对话，让它全网扫面经并整理成清单，回来整段粘贴（多行批量，每行一题）。",
+    qTypes: { screening: "📞 筛选轮", behavioral: "🗣 行为面", product: "📦 产品题", analytical: "📊 数据分析", company: "🏢 公司面经", reverse: "🙋 反问环节" },
+    ivCardsTitle: "筛选轮标准答案卡",
+    ivCardsHint: "recruiter screen的四道必考题，答案提前定稿——这些不需要即兴发挥，需要的是每次都说得一样稳。",
+    cardIntro: "60秒自我介绍", cardWhyUs: "为什么想来我们公司（通用框架，按公司填空）", cardVisa: "身份/签证话术（CPT/OPT时间线）", cardSalary: "薪资预期话术",
+    ivAutoSave: "自动保存到本机",
+    ivStoriesHint2: "为每条值得讲的经历打磨一个≤90秒的STAR故事。手动贴入bullet，或点「从简历导入」勾选；AI审查绝不编造，缺事实只追问。⚪未开发 🟡草稿 🟢已打磨", ivImport: "从简历导入", ivImportPick: "勾选要准备故事的bullet（已在列表中的显示✓）", ivImportBtn: "导入所选", ivCompany: "公司", ivNoCompany: "未分组", ivEmptyList: "还没有条目——上方贴入一条bullet，或从简历导入", del: "删除",
+    delSure: "确认删除？",
+    ivDelConfirm: "删除这条及其故事？", ivDelStoryConfirm: "删除这条bullet的故事草稿和审查记录？（bullet本身来自简历，仍会显示）",
+    ivToManual: "转为手动条目（可编辑文本）", edit: "编辑",
+    back: "返回",
+    regionAll: "全部地区", regionNA: "北美", regionCN: "中国", fRegion: "地区", fPosted: "岗位发布日期", fApplied: "我的投递日期（改阶段为已投递时自动记录，可修改）",
     menuHelp: "使用指南", menuExport: "导出备份", menuImport: "导入备份",
     exportTip: "导出备份（不含API Key）", importTip: "导入备份", importOk: "导入成功，即将刷新", importBad: "文件格式不对，请选择 OfferPilot 导出的备份文件",
     aiAsks: "AI 想问你", aiAsksHint: "在下方对话框里回答，AI 会把你的补充事实织进改写",
@@ -49,7 +75,7 @@ const I18N = {
     resumeLib: "简历库", addResume: "添加简历", resumeName: "简历名称", editBtn: "编辑", noResumes: "还没有简历，点击添加",
     usingResume: "使用简历", autoPick: "帮我选简历", picking: "AI 判断中...", pickFail: "自动选择失败，请手动选一份",
     persona: "他们在找什么人", hiddenSignal: "隐藏信号", folioReview: "作品集评审", folioLead: "主打项目", folioAlign: "对齐度", folioGap: "缺口",
-    stages: { saved: "收藏", applied: "已投递", referral_asked: "求内推", referral_got: "获内推", interview: "面试中", offer: "Offer", rejected: "已拒" },
+    stages: { saved: "收藏", applied: "已投递", referral_asked: "求内推", referral_got: "获内推", written_test: "已笔试", interview: "面试中", offer: "Offer", rejected: "已拒" },
     pm: "PM", pd: "PD",
     today: "今天", yesterday: "昨天", daysAgo: d => `${d}天前`, weeksAgo: w => `${w}周前`,
   },
@@ -86,6 +112,32 @@ const I18N = {
     myPortfolio: "Portfolio (for UX/PD roles)", portfolioHint: "Paste project summaries (recommended) or portfolio URL; saved for reuse", portfolioPlaceholder: "Project 1: Smart home app redesign, end-to-end...\nor https://yourportfolio.com",
     ftLabel: "Full-time", internLabel: "Intern",
     picksTitle: "Today's Picks", picksSub: "Ranked by your lane strategy · last 48h", pkOps: "Ops/PjM", pkGrowth: "Growth/CRM", pkAI: "AI lane", pkLocal: "🏠Seattle local", pkRemote: "Remote", pkToday: "New today",
+    interview: "Interview",
+    ivStories: "Story Studio", ivBank: "Question Bank", ivCards: "Answer Cards",
+    ivStoriesTitle: "Every resume bullet deserves a 90-second story",
+    ivStoriesHint: "Bullets are auto-extracted from your resume library. Click one, draft your story, and AI reviews it against STAR completeness, single-point focus (anti-rambling), and spoken length — it never invents facts, only asks for missing ones. ⚪ not started 🟡 draft 🟢 polished",
+    ivNoBullets: "Resume library is empty — upload a resume in Resume Lab first, or add a custom story above",
+    ivCustomPh: "Paste a resume bullet, or describe any experience worth preparing (a failure, a conflict), then click +", ivCustomAdd: "Add", ivCustomTag: "Manual",
+    channelsSub: "official campus portals",
+    ivDraftLabel: "Your story draft (write it the way you'd say it)",
+    ivDraftPh: "Tell the story behind this bullet: the situation, your ownership, what YOU did, and the result…",
+    ivReview: "Review this story", ivReviewing: "Reviewing…",
+    ivMainPoint: "The ONE thing this story proves", ivCuts: "Cut these", ivPolished: "Polished (≤90s spoken)",
+    ivMarkDone: "Mark polished", ivMarkDraft: "Back to draft",
+    ivAddQ: "Add a question", ivQCompany: "Company (optional)", ivQPh: "Paste questions (multi-line = one per line). Sources: JD predictions, interview research, post-interview recall",
+    ivBankEmpty: "Empty. Sources: predicted questions from Resume Lab's JD analysis, interview research, real-interview recall",
+    ivBankFlow: "Research workflow: send company + role + round to Claude in chat for a web sweep, then paste the list back here (one question per line).",
+    qTypes: { screening: "📞 Screening", behavioral: "🗣 Behavioral", product: "📦 Product", analytical: "📊 Analytical", company: "🏢 Company-specific", reverse: "🙋 Reverse Qs" },
+    ivCardsTitle: "Screening-round answer cards",
+    ivCardsHint: "The four questions every recruiter screen asks. Script them once — these reward consistency, not improvisation.",
+    cardIntro: "60-second intro", cardWhyUs: "Why us (framework, fill per company)", cardVisa: "Visa talk track (CPT/OPT timeline)", cardSalary: "Salary expectations talk track",
+    ivAutoSave: "Auto-saved locally",
+    ivStoriesHint2: "Polish a ≤90s STAR story for every experience worth telling. Paste a bullet manually, or use Import to pick from your resumes. AI never invents — it only asks. ⚪ not started 🟡 draft 🟢 polished", ivImport: "Import from resumes", ivImportPick: "Pick bullets to prepare (✓ = already in list)", ivImportBtn: "Import selected", ivCompany: "Company", ivNoCompany: "Ungrouped", ivEmptyList: "Nothing yet — paste a bullet above, or import from your resumes", del: "Delete",
+    delSure: "Confirm?",
+    ivDelConfirm: "Delete this entry and its story?", ivDelStoryConfirm: "Delete this bullet's story draft and review? (The bullet itself comes from your resume and will remain listed.)",
+    ivToManual: "Convert to manual entry (editable text)", edit: "Edit",
+    back: "Back",
+    regionAll: "All regions", regionNA: "North America", regionCN: "China", fRegion: "Region", fPosted: "Job posted date", fApplied: "My application date (auto-set when moved to Applied; editable)",
     menuHelp: "How to use", menuExport: "Export backup", menuImport: "Import backup",
     exportTip: "Export backup (API key excluded)", importTip: "Import backup", importOk: "Imported — reloading", importBad: "Invalid file — choose an OfferPilot backup",
     aiAsks: "AI asks you", aiAsksHint: "Answer in the chat below — new facts get woven into revised bullets",
@@ -99,7 +151,7 @@ const I18N = {
     resumeLib: "Resume Library", addResume: "Add resume", resumeName: "Resume name", editBtn: "Edit", noResumes: "No resumes yet — add one",
     usingResume: "Using", autoPick: "Pick for me", picking: "Deciding...", pickFail: "Auto-pick failed — select manually",
     persona: "Who they really want", hiddenSignal: "Hidden signal", folioReview: "Portfolio review", folioLead: "Lead with", folioAlign: "Alignment", folioGap: "Gap",
-    stages: { saved: "Saved", applied: "Applied", referral_asked: "Asked", referral_got: "Secured", interview: "Interview", offer: "Offer", rejected: "Rejected" },
+    stages: { saved: "Saved", applied: "Applied", referral_asked: "Asked", referral_got: "Secured", written_test: "Test done", interview: "Interview", offer: "Offer", rejected: "Rejected" },
     pm: "PM", pd: "PD",
     today: "Today", yesterday: "Yesterday", daysAgo: d => `${d}d ago`, weeksAgo: w => `${w}w ago`,
   },
@@ -110,6 +162,7 @@ const STAGES = [
   { id: "applied", color: "#7BA1C7", accent: "#B8D4F0" },
   { id: "referral_asked", color: "#C9A86C", accent: "#F0DFB8" },
   { id: "referral_got", color: "#7BAF8B", accent: "#B8E5C8" },
+  { id: "written_test", color: "#8FA3C4", accent: "#C4D4EC" },
   { id: "interview", color: "#9B8EC4", accent: "#CBBEF0" },
   { id: "offer", color: "#C47B8B", accent: "#F0B8C4" },
   { id: "rejected", color: "#A88A8A", accent: "#D9C4C4" },
@@ -259,7 +312,7 @@ export default function OfferPilot() {
   const [jobs,setJobs]=useState(INITIAL_JOBS);
   const [lang,setLang]=useState("zh");
   const [view,setView]=useState("dashboard");
-  const [filter,setFilter]=useState({type:"all",search:"",window:"24h",h1bOnly:false,jobType:"all"});
+  const [filter,setFilter]=useState({type:"all",search:"",window:"24h",h1bOnly:false,jobType:"all",region:"all"});
   const [showAdd,setShowAdd]=useState(false);
   const [editJob,setEditJob]=useState(null);
   const [confirmDel,setConfirmDel]=useState(null);
@@ -268,6 +321,7 @@ export default function OfferPilot() {
   const [refreshMsg,setRefreshMsg]=useState("");
   const [showHelp,setShowHelp]=useState(false);
   const [showMenu,setShowMenu]=useState(false);
+  const [showChannels,setShowChannels]=useState(false);
   const t=I18N[lang];
 
   useEffect(()=>{(async()=>{
@@ -298,6 +352,7 @@ export default function OfferPilot() {
     if(j.jobType==="intern"&&seasonBlocked(j.title,"intern"))return false;
     if(filter.jobType!=="all"&&(j.jobType||"fulltime")!==filter.jobType)return false;
     if(filter.h1bOnly&&j.h1b!=="likely")return false;
+    if(filter.region!=="all"&&(j.region||"NA")!==filter.region)return false;
     const age=Math.floor((new Date()-new Date(j.posted))/864e5);
     if(j.stage==="saved" && age>WINDOW_DAYS[filter.window])return false;
     return true;
@@ -315,7 +370,7 @@ export default function OfferPilot() {
     ops:jobs.filter(j=>j.type==="Product Ops").length,
   }),[jobs]);
 
-  const moveJob=(id,ns)=>setJobs(p=>p.map(j=>j.id===id?{...j,stage:ns}:j));
+  const moveJob=(id,ns)=>setJobs(p=>p.map(j=>j.id===id?{...j,stage:ns,appliedDate:(ns!=="saved"&&!j.appliedDate)?new Date().toISOString().split("T")[0]:j.appliedDate}:j));
 
   const doRefresh=async()=>{
     setRefreshing(true);setRefreshMsg("");
@@ -361,7 +416,7 @@ export default function OfferPilot() {
           </div>
           {/* Nav */}
           <div style={{ display: "flex", gap: 4, marginLeft: 20 }}>
-            {[{id:"dashboard",l:t.dashboard},{id:"jobs",l:t.jobs},{id:"pipeline",l:t.pipeline},{id:"lab",l:t.lab},{id:"channels",l:t.channels}].map(n => (
+            {[{id:"dashboard",l:t.dashboard},{id:"jobs",l:t.jobs},{id:"pipeline",l:t.pipeline},{id:"lab",l:t.lab},{id:"interview",l:t.interview}].map(n => (
               <button key={n.id} onClick={() => setView(n.id)} style={{
                 padding: "8px 22px", borderRadius: 999, border: "none", fontSize: 13, fontWeight: 500,
                 background: view === n.id ? "rgba(255,255,255,0.75)" : "transparent",
@@ -386,7 +441,7 @@ export default function OfferPilot() {
                 </button>
                 <button onClick={async () => {
                   setShowMenu(false);
-                  const keys = ["op2-data","op2-lang","op2-resumes","op2-active-resume","op2-portfolio","op2-reports"];
+                  const keys = ["op2-data","op2-lang","op2-resumes","op2-active-resume","op2-portfolio","op2-reports","op2-interview"];
                   const dump = {};
                   for (const k of keys) { try { const r = await window.storage.get(k); if (r?.value) dump[k] = r.value; } catch {} }
                   const blob = new Blob([JSON.stringify({ app: "offerpilot", exported: new Date().toISOString(), data: dump })], { type: "application/json" });
@@ -446,10 +501,18 @@ export default function OfferPilot() {
 
         {/* Views */}
         {view === "dashboard" && <Dashboard stats={stats} jobs={jobs} t={t} setEditJob={setEditJob} />}
-        {view === "jobs" && <JobBoard jobs={filtered} filter={filter} setFilter={setFilter} moveJob={moveJob} requestDelete={setConfirmDel} setEditJob={setEditJob} t={t} />}
+        {view === "jobs" && (<>
+          <div style={{ marginBottom: 14 }}>
+            <button onClick={() => setShowChannels(s => !s)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 18px", background: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.5)", borderRadius: 14, fontSize: 12.5, fontWeight: 600, color: "#5A5A6E", cursor: "pointer", backdropFilter: "blur(8px)" }}>
+              🚄 {t.channels} <span style={{ fontSize: 10, color: "#9A9AAA" }}>{t.channelsSub}</span> <span style={{ marginLeft: 4 }}>{showChannels ? "▾" : "▸"}</span>
+            </button>
+            {showChannels && <div style={{ marginTop: 12 }}><Channels t={t} lang={lang} /></div>}
+          </div>
+          <JobBoard jobs={filtered} filter={filter} setFilter={setFilter} moveJob={moveJob} requestDelete={setConfirmDel} setEditJob={setEditJob} t={t} />
+        </>)}
         {view === "pipeline" && <PipelineView jobs={filtered} filter={filter} setFilter={setFilter} moveJob={moveJob} setEditJob={setEditJob} t={t} />}
         {view === "lab" && <ResumeLab t={t} lang={lang} />}
-        {view === "channels" && <Channels t={t} lang={lang} />}
+        {view === "interview" && <InterviewHub t={t} lang={lang} />}
       </div>
 
       {showHelp && <HelpModal lang={lang} onClose={() => setShowHelp(false)} />}
@@ -537,23 +600,321 @@ function scorePick(j, t) {
 }
 
 
+
+// ===== v0.4a 面试中心 =====
+const Q_TYPES = ["screening","behavioral","product","analytical","company","reverse"];
+const STORY_STATUS = { none: "⚪", draft: "🟡", polished: "🟢" };
+
+async function reviewStory(bullet, story, lang) {
+  const zh = lang === "zh";
+  const prompt = `You are a rigorous interview-story coach. The candidate wants to tell this resume bullet as a spoken behavioral-interview story.
+
+BULLET: ${bullet.slice(0, 300)}
+THEIR STORY DRAFT:
+${story.slice(0, 3000)}
+
+Review against these HARD RULES:
+1. STAR completeness — Situation set? Task (their ownership boundary) clear? Actions use "I" not "we" for their own moves? Result quantified?
+2. Anti-rambling — S+T must be ≤25% of the story (~15-20 seconds spoken). Flag any context bloat. ONE main point per story (judgment? collaboration? resilience?) — if it tries to prove 3 things, say which ONE to keep and what to cut.
+3. Spoken length — estimate seconds when spoken aloud (~140 words/min English, ~240 chars/min Chinese). Over 90s = too long, provide a cut.
+4. NEVER invent facts. If a detail is missing (a number, an outcome), ASK for it — max 2 questions.
+
+Reply ONLY with JSON (analysis in ${zh ? "Simplified Chinese" : "English"}, rewrite in the story's language):
+{"verdict":"<one-line overall>","seconds":<int>,"star":{"s":"ok|weak|missing","t":"ok|weak|missing","a":"ok|weak|missing","r":"ok|weak|missing"},"mainPoint":"<the ONE point this story proves>","issues":["<up to 4, most damaging first>"],"cuts":["<up to 3 things to delete>"],"polished":"<tightened version, ≤90s spoken, keep all real facts>","ask":["<up to 2 questions for missing facts>"],"tags":["<up to 3 competency tags e.g. leadership, conflict, data-driven>"]}`;
+  if (!getApiKey()) throw new Error("NO_KEY");
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST", headers: apiHeaders(),
+    body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1400, messages: [{ role: "user", content: prompt }] }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || "API error");
+  const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+  return JSON.parse(text.replace(/```json|```/g, "").trim());
+}
+
+function InterviewHub({ t, lang }) {
+  const [resumes, setResumes] = useState([]);
+  const [tab, setTab] = useState("stories");
+  const [entries, setEntries] = useState([]);
+  const [questions, setQuestions] = useState([]);
+  const [cards, setCards] = useState({ intro: "", visa: "", salary: "", whyus: "" });
+  const [loaded, setLoaded] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [qForm, setQForm] = useState({ type: "behavioral", text: "", company: "" });
+  const [manual, setManual] = useState({ bullet: "", company: "" });
+  const [showImport, setShowImport] = useState(false);
+  const [confirmDel, setConfirmDelId] = useState(null); // 两击删除确认
+  const [picked, setPicked] = useState({});
+
+  useEffect(() => { (async () => {
+    try { const r = await window.storage.get("op2-interview"); if (r?.value) { const d = JSON.parse(r.value);
+      const st = (d.stories || []).map((s, i) => ({ id: s.id || "s" + i + Date.now(), bullet: s.bullet, company: s.company || "", draft: s.draft || "", review: s.review || null, status: s.status || "none", updated: s.updated || "" }));
+      setEntries(st); setQuestions(d.questions || []); setCards(d.cards || { intro: "", visa: "", salary: "", whyus: "" }); } } catch {}
+    try { const rr = await window.storage.get("op2-resumes"); if (rr?.value) setResumes(JSON.parse(rr.value)); } catch {}
+    setLoaded(true);
+  })(); }, []);
+  useEffect(() => { if (!loaded) return; window.storage.set("op2-interview", JSON.stringify({ stories: entries, questions, cards })).catch(() => {}); }, [entries, questions, cards, loaded]);
+
+  // 从简历解析bullet并识别所属公司(经历段落标题格式: Title | Company | ...)
+  const parsed = [];
+  resumes.forEach(r => {
+    let company = "";
+    r.content.split("\n").forEach(line => {
+      const h = line.match(/^#{2,4}\s+(.+)$/);
+      if (h) { const parts = h[1].split("|").map(x => x.trim()); company = parts.length >= 2 ? parts[1] : parts[0]; return; }
+      const b = line.match(/^[-•●]\s*(.+)$/);
+      if (b && b[1].trim().length > 30) parsed.push({ company: company || r.name, text: b[1].trim(), resume: r.name });
+    });
+  });
+  // 去重(同一bullet可能在多份简历重复)
+  const seen = new Set();
+  const importable = parsed.filter(p => { const k = p.text.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+
+  const entry = entries.find(e => e.id === editId);
+  const upd = (patch) => setEntries(p => p.map(e => e.id === editId ? { ...e, ...patch } : e));
+
+  const runReview = async () => {
+    if (!entry || !entry.draft.trim() || busy) return;
+    setBusy(true);
+    try {
+      const rep = await reviewStory(entry.bullet, entry.draft, lang);
+      upd({ review: rep, status: entry.status === "polished" ? "polished" : "draft", updated: new Date().toISOString().split("T")[0] });
+    } catch (e) { upd({ review: { verdict: e.message === "NO_KEY" ? t.keyTitle : t.analyzeFail, issues: [] } }); }
+    setBusy(false);
+  };
+
+  const groups = {};
+  entries.forEach(e => { const k = e.company || t.ivNoCompany; (groups[k] = groups[k] || []).push(e); });
+
+  const TabBtn = ({ id, label }) => (
+    <button onClick={() => { setTab(id); setEditId(null); }} style={{ padding: "8px 18px", borderRadius: 999, border: "none", fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+      background: tab === id ? "rgba(255,255,255,0.85)" : "transparent", color: tab === id ? "#2C2C3A" : "#9A9AAA",
+      boxShadow: tab === id ? "0 2px 8px rgba(0,0,0,0.06)" : "none" }}>{label}</button>
+  );
+  const btnStyle = (danger) => ({ padding: "5px 14px", borderRadius: 999, border: "none", fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0,
+    background: danger ? "rgba(224,122,122,0.12)" : "rgba(123,161,199,0.15)", color: danger ? "#B05A5A" : "#5A7EA0" });
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.35)", borderRadius: 999, padding: 4, width: "fit-content", marginBottom: 16 }}>
+        <TabBtn id="stories" label={"📖 " + t.ivStories} />
+        <TabBtn id="bank" label={"🗃 " + t.ivBank} />
+        <TabBtn id="cards" label={"🎴 " + t.ivCards} />
+      </div>
+
+      {/* ===== 故事工坊: 列表 ===== */}
+      {tab === "stories" && !editId && (
+        <div>
+          <Glass style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{t.ivStoriesTitle}</div>
+            <div style={{ fontSize: 11.5, color: "#9A9AAA", marginBottom: 12, lineHeight: 1.6 }}>{t.ivStoriesHint2}</div>
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flexWrap: "wrap" }}>
+              <textarea value={manual.bullet} onChange={e => setManual(m => ({ ...m, bullet: e.target.value }))} placeholder={t.ivCustomPh} rows={2}
+                style={{ flex: "1 1 300px", padding: "10px 16px", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 14, fontSize: 12, outline: "none", background: "rgba(255,255,255,0.6)", fontFamily: "inherit", resize: "vertical", lineHeight: 1.6 }} />
+              <input value={manual.company} onChange={e => setManual(m => ({ ...m, company: e.target.value }))} placeholder={t.ivCompany}
+                style={{ width: 130, padding: "10px 14px", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 999, fontSize: 12, outline: "none", background: "rgba(255,255,255,0.6)" }} />
+              <button onClick={() => { const b = manual.bullet.trim(); if (b) { setEntries(p => [...p, { id: "e" + Date.now(), bullet: b, company: manual.company.trim(), draft: "", review: null, status: "none", updated: "" }]); setManual({ bullet: "", company: "" }); } }}
+                style={{ padding: "10px 22px", background: "linear-gradient(135deg, #9B8EC4, #7BA1C7)", color: "#fff", border: "none", borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>+ {t.ivCustomAdd}</button>
+              {importable.length > 0 && (
+                <button onClick={() => { setShowImport(s => !s); setPicked({}); }} style={{ padding: "10px 18px", background: "rgba(255,255,255,0.6)", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#5A5A6E" }}>
+                  📥 {t.ivImport} {showImport ? "▾" : "▸"}
+                </button>
+              )}
+            </div>
+          </Glass>
+
+          {/* 导入选择面板 */}
+          {showImport && (
+            <Glass style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>{t.ivImportPick}</div>
+              {[...new Set(importable.map(p => p.company))].map(co => (
+                <div key={co} style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: "#7A6EA4", marginBottom: 4 }}>{co}</div>
+                  {importable.filter(p => p.company === co).map((p, i) => {
+                    const already = entries.some(e => e.bullet === p.text);
+                    return (
+                      <label key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "5px 0", cursor: already ? "default" : "pointer", opacity: already ? 0.45 : 1 }}>
+                        <input type="checkbox" disabled={already} checked={!!picked[p.text]} onChange={e => setPicked(pk => ({ ...pk, [p.text]: e.target.checked }))} style={{ marginTop: 2 }} />
+                        <span style={{ fontSize: 11.5, lineHeight: 1.5 }}>{p.text.slice(0, 110)}{p.text.length > 110 ? "…" : ""}{already && " ✓" }</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              ))}
+              <button onClick={() => {
+                const sel = importable.filter(p => picked[p.text]);
+                if (sel.length) setEntries(prev => [...prev, ...sel.map((p, i) => ({ id: "i" + Date.now() + i, bullet: p.text, company: p.company, draft: "", review: null, status: "none", updated: "" }))]);
+                setShowImport(false); setPicked({});
+              }} style={{ padding: "9px 22px", background: "rgba(123,175,139,0.85)", color: "#fff", border: "none", borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                {t.ivImportBtn} ({Object.values(picked).filter(Boolean).length})
+              </button>
+            </Glass>
+          )}
+
+          {/* 按公司分组的条目列表 */}
+          {entries.length === 0 && !showImport && <Glass><div style={{ fontSize: 12, color: "#9A9AAA", textAlign: "center", padding: 20 }}>{t.ivEmptyList}</div></Glass>}
+          {Object.entries(groups).map(([co, list]) => (
+            <Glass key={co} style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#7A6EA4", marginBottom: 6 }}>{co} <span style={{ color: "#B0B0BA", fontWeight: 400 }}>({list.length})</span></div>
+              {list.map(e => (
+                <div key={e.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 0", borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
+                  <span style={{ fontSize: 14, flexShrink: 0 }}>{STORY_STATUS[e.status === "polished" ? "polished" : e.draft ? "draft" : "none"]}</span>
+                  <div onClick={() => setEditId(e.id)} style={{ flex: 1, minWidth: 0, cursor: "pointer" }}>
+                    <div style={{ fontSize: 12, lineHeight: 1.5 }}>{e.bullet.slice(0, 110)}{e.bullet.length > 110 ? "…" : ""}</div>
+                    {e.review?.tags && <div style={{ fontSize: 10.5, color: "#B0B0BA", marginTop: 2 }}>{e.review.tags.join(" / ")}</div>}
+                  </div>
+                  <button onClick={() => setEditId(e.id)} style={btnStyle(false)}>{t.edit}</button>
+                  <button onClick={() => { if (confirmDel === e.id) { setEntries(p => p.filter(x => x.id !== e.id)); setConfirmDelId(null); } else { setConfirmDelId(e.id); setTimeout(() => setConfirmDelId(cur => cur === e.id ? null : cur), 2500); } }}
+                    style={{ ...btnStyle(true), background: confirmDel === e.id ? "rgba(224,122,122,0.85)" : "rgba(224,122,122,0.12)", color: confirmDel === e.id ? "#fff" : "#B05A5A" }}>
+                    {confirmDel === e.id ? t.delSure : t.del}</button>
+                </div>
+              ))}
+            </Glass>
+          ))}
+        </div>
+      )}
+
+      {/* ===== 故事编辑页 ===== */}
+      {tab === "stories" && entry && (
+        <div>
+          <button onClick={() => setEditId(null)} style={{ background: "none", border: "none", color: "#7A6EA4", fontSize: 12, cursor: "pointer", marginBottom: 10, padding: 0 }}>← {t.back}</button>
+          <Glass style={{ marginBottom: 12 }}>
+            <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, color: "#9A9AAA", marginBottom: 4 }}>BULLET</div>
+                <textarea value={entry.bullet} onChange={e => upd({ bullet: e.target.value })} rows={2}
+                  style={{ width: "100%", padding: "10px 14px", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 12, fontSize: 12.5, lineHeight: 1.6, outline: "none", resize: "vertical", fontFamily: "inherit", background: "rgba(123,161,199,0.06)", boxSizing: "border-box" }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: "#9A9AAA", marginBottom: 4 }}>{t.ivCompany}</div>
+                <input value={entry.company} onChange={e => upd({ company: e.target.value })}
+                  style={{ width: 130, padding: "10px 14px", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 12, fontSize: 12, outline: "none", background: "rgba(255,255,255,0.6)" }} />
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: "#9A9AAA", marginBottom: 6 }}>{t.ivDraftLabel}</div>
+            <textarea value={entry.draft} onChange={e => upd({ draft: e.target.value })} placeholder={t.ivDraftPh}
+              style={{ width: "100%", minHeight: 180, padding: 14, border: "1px solid rgba(0,0,0,0.08)", borderRadius: 14, fontSize: 12.5, lineHeight: 1.7, outline: "none", resize: "vertical", fontFamily: "inherit", background: "rgba(255,255,255,0.6)", boxSizing: "border-box" }} />
+            <div style={{ display: "flex", gap: 10, marginTop: 10, alignItems: "center" }}>
+              <button onClick={runReview} disabled={busy} style={{ padding: "10px 24px", background: busy ? "rgba(0,0,0,0.08)" : "linear-gradient(135deg, #9B8EC4, #7BA1C7)", color: "#fff", border: "none", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: busy ? "wait" : "pointer" }}>
+                {busy ? t.ivReviewing : "✨ " + t.ivReview}
+              </button>
+              <button onClick={() => upd({ status: entry.status === "polished" ? "draft" : "polished" })}
+                style={{ padding: "10px 20px", background: "rgba(123,175,139,0.15)", color: "#4A8A5A", border: "none", borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                {entry.status === "polished" ? "🟡 " + t.ivMarkDraft : "🟢 " + t.ivMarkDone}
+              </button>
+              <button onClick={() => { if (confirmDel === editId) { setEntries(p => p.filter(x => x.id !== editId)); setConfirmDelId(null); setEditId(null); } else { setConfirmDelId(editId); setTimeout(() => setConfirmDelId(cur => cur === editId ? null : cur), 2500); } }}
+                style={{ ...btnStyle(true), background: confirmDel === editId ? "rgba(224,122,122,0.85)" : "rgba(224,122,122,0.12)", color: confirmDel === editId ? "#fff" : "#B05A5A" }}>
+                {confirmDel === editId ? t.delSure : t.del}</button>
+            </div>
+          </Glass>
+          {entry.review && (
+            <Glass>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>{entry.review.verdict}</div>
+              {entry.review.star && (
+                <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+                  {["s","t","a","r"].map(k => (
+                    <span key={k} style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 999,
+                      background: entry.review.star[k] === "ok" ? "rgba(123,175,139,0.15)" : entry.review.star[k] === "weak" ? "rgba(201,168,108,0.18)" : "rgba(224,122,122,0.15)",
+                      color: entry.review.star[k] === "ok" ? "#4A8A5A" : entry.review.star[k] === "weak" ? "#9A7A3A" : "#B05A5A" }}>
+                      {k.toUpperCase()} {entry.review.star[k] === "ok" ? "✓" : entry.review.star[k] === "weak" ? "△" : "✗"}
+                    </span>
+                  ))}
+                  {entry.review.seconds && <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 999, background: entry.review.seconds > 90 ? "rgba(224,122,122,0.15)" : "rgba(0,0,0,0.05)", color: entry.review.seconds > 90 ? "#B05A5A" : "#5A5A6E", fontWeight: 700 }}>⏱ ~{entry.review.seconds}s</span>}
+                </div>
+              )}
+              {entry.review.mainPoint && <div style={{ fontSize: 12, marginBottom: 10 }}><b>{t.ivMainPoint}:</b> {entry.review.mainPoint}</div>}
+              {entry.review.issues?.length > 0 && <div style={{ marginBottom: 10 }}>{entry.review.issues.map((x, i) => <div key={i} style={{ fontSize: 12, color: "#8A5A5A", lineHeight: 1.7 }}>· {x}</div>)}</div>}
+              {entry.review.cuts?.length > 0 && <div style={{ marginBottom: 10, padding: "10px 14px", background: "rgba(224,122,122,0.06)", borderRadius: 12 }}><div style={{ fontSize: 11, fontWeight: 700, color: "#B05A5A", marginBottom: 4 }}>✂️ {t.ivCuts}</div>{entry.review.cuts.map((x, i) => <div key={i} style={{ fontSize: 11.5, color: "#7A5A5A", lineHeight: 1.6 }}>· {x}</div>)}</div>}
+              {entry.review.polished && <div style={{ padding: "12px 16px", background: "rgba(123,175,139,0.08)", borderRadius: 12, marginBottom: 10 }}><div style={{ fontSize: 11, fontWeight: 700, color: "#4A8A5A", marginBottom: 6 }}>✨ {t.ivPolished}</div><div style={{ fontSize: 12.5, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{entry.review.polished}</div></div>}
+              {entry.review.ask?.length > 0 && <div style={{ padding: "10px 14px", background: "rgba(107,159,212,0.08)", borderRadius: 12 }}><div style={{ fontSize: 11, fontWeight: 700, color: "#4A7AA8", marginBottom: 4 }}>💬 {t.aiAsks}</div>{entry.review.ask.map((x, i) => <div key={i} style={{ fontSize: 12, color: "#4A5A7E", lineHeight: 1.6 }}>· {x}</div>)}</div>}
+            </Glass>
+          )}
+        </div>
+      )}
+
+      {/* ===== 题库 ===== */}
+      {tab === "bank" && (
+        <div>
+          <Glass style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{t.ivAddQ}</div>
+            <div style={{ fontSize: 11, color: "#9A9AAA", marginBottom: 10, lineHeight: 1.6 }}>{t.ivBankFlow}</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+              <select value={qForm.type} onChange={e => setQForm(f => ({ ...f, type: e.target.value }))}
+                style={{ padding: "8px 14px", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 999, fontSize: 12, outline: "none", background: "rgba(255,255,255,0.6)" }}>
+                {Q_TYPES.map(q => <option key={q} value={q}>{t.qTypes[q]}</option>)}
+              </select>
+              <input value={qForm.company} onChange={e => setQForm(f => ({ ...f, company: e.target.value }))} placeholder={t.ivQCompany}
+                style={{ padding: "8px 14px", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 999, fontSize: 12, outline: "none", background: "rgba(255,255,255,0.6)", width: 140 }} />
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <textarea value={qForm.text} onChange={e => setQForm(f => ({ ...f, text: e.target.value }))} placeholder={t.ivQPh} rows={2}
+                style={{ flex: 1, padding: "10px 16px", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 14, fontSize: 12, outline: "none", background: "rgba(255,255,255,0.6)", fontFamily: "inherit", resize: "vertical" }} />
+              <button onClick={() => {
+                const lines = qForm.text.split("\n").map(x => x.trim()).filter(Boolean);
+                if (!lines.length) return;
+                setQuestions(p => [...lines.map((ln, i) => ({ type: qForm.type, company: qForm.company, text: ln, id: (Date.now() + i).toString(), added: new Date().toISOString().split("T")[0] })), ...p]);
+                setQForm(f => ({ ...f, text: "" }));
+              }} style={{ padding: "10px 22px", background: "linear-gradient(135deg, #9B8EC4, #7BA1C7)", color: "#fff", border: "none", borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>+</button>
+            </div>
+          </Glass>
+          {Q_TYPES.map(qt => {
+            const qs = questions.filter(q => q.type === qt);
+            if (!qs.length) return null;
+            return (
+              <Glass key={qt} style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 8 }}>{t.qTypes[qt]} <span style={{ color: "#B0B0BA", fontWeight: 400 }}>({qs.length})</span></div>
+                {qs.map(q => (
+                  <div key={q.id} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "7px 0", borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
+                    <div style={{ flex: 1, fontSize: 12, lineHeight: 1.6 }}>{q.text}{q.company && <span style={{ fontSize: 10, color: "#8AA0B8", marginLeft: 8 }}>@{q.company}</span>}</div>
+                    <button onClick={() => setQuestions(p => p.filter(x => x.id !== q.id))} style={btnStyle(true)}>{t.del}</button>
+                  </div>
+                ))}
+              </Glass>
+            );
+          })}
+          {questions.length === 0 && <div style={{ fontSize: 12, color: "#9A9AAA", textAlign: "center", padding: 30 }}>{t.ivBankEmpty}</div>}
+        </div>
+      )}
+
+      {/* ===== 答案卡 ===== */}
+      {tab === "cards" && (
+        <Glass>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{t.ivCardsTitle}</div>
+          <div style={{ fontSize: 11.5, color: "#9A9AAA", marginBottom: 14, lineHeight: 1.6 }}>{t.ivCardsHint}</div>
+          {[["intro", t.cardIntro], ["whyus", t.cardWhyUs], ["visa", t.cardVisa], ["salary", t.cardSalary]].map(([k, label]) => (
+            <div key={k} style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 5 }}>{label}</div>
+              <textarea value={cards[k]} onChange={e => setCards(p => ({ ...p, [k]: e.target.value }))}
+                style={{ width: "100%", minHeight: 70, padding: 12, border: "1px solid rgba(0,0,0,0.08)", borderRadius: 12, fontSize: 12, lineHeight: 1.7, outline: "none", resize: "vertical", fontFamily: "inherit", background: "rgba(255,255,255,0.6)", boxSizing: "border-box" }} />
+            </div>
+          ))}
+          <div style={{ fontSize: 10.5, color: "#B0B0BA" }}>{t.ivAutoSave}</div>
+        </Glass>
+      )}
+    </div>
+  );
+}
+
 // ===== 使用指南 =====
 const HELP = {
   zh: [
     ["🔍 搜索框（查档模式）", "输入任意连续字符即可匹配公司名、职位名或地点（如输入 veev 找 Veeva）。搜索时自动忽略所有筛选器和时间窗口，在全部数据中查找——包括你已投递、已拒的历史岗位。想确认某公司投过没有：直接搜名字，看阶段列。"],
     ["📥 岗位页", "每天自动从8个开源仓库抓取新岗位（打开网站自动刷新，1小时冷却）。默认显示24小时内新发；筛选器：时间窗口 / 全职·实习 / 🌱只看H1B友好 / 五类岗位标签。已过滤：Senior岗、TPM、仅限美国公民、猎头、超出资格窗口的实习。"],
     ["📌 今日必投", "概览页顶部，按赛道胜率自动为近48小时新岗打分排序（Ops/PjM > Growth/CRM > AI > 其他），叠加本地、H1B、新发加分。点击条目直接编辑，↗ 直达申请页。"],
-    ["🗂 看板", "七阶段管道：收藏→已投递→求内推→获内推→面试中→Offer / 已拒。拖不了卡片时用岗位行的下拉框改阶段。手动添加的岗位（右下角+）与抓取岗位完全同权：一样计入统计、漏斗和趋势图。"],
+    ["🗂 看板", "八阶段管道：收藏→已投递→求内推→获内推→已笔试→面试中→Offer / 已拒。地区筛选（北美/中国）在筛选栏下拉框。拖不了卡片时用岗位行的下拉框改阶段。手动添加的岗位（右下角+）与抓取岗位完全同权：一样计入统计、漏斗和趋势图。"],
     ["🤖 简历工坊", "上传简历（.md/.txt）→ 贴JD（公司职位自动识别）→ 🎯帮我选简历 → 生成报告：匹配分、ATS关键词、persona解码、带保护规则的bullet改写、AI反问。不满意就在报告下方对话微调；改完简历用同一JD重测看分数变化。需要自己的 Anthropic API Key（只存本机浏览器）。"],
-    ["🚄 直通车", "大厂官方校招入口合集（APM项目、设计、硬件、Startup平台）——Amazon/Google 这类只发自家官网的岗位走这里+LinkedIn alert，不经过抓取管道。"],
+    ["🎤 面试中心", "三件套：故事工坊——从简历自动提取bullet，为每条打磨一个≤90秒的STAR故事（AI审重点聚焦和时长，绝不编造）；题库——按六种题型归档（筛选/行为/产品/数据/公司面经/反问）；答案卡——筛选轮四道必考题的定稿话术。深度复盘和模拟面试在Claude对话里进行。"],
+    ["🚄 直通车", "位于岗位页顶部的折叠区（🚄按钮展开）：大厂官方校招入口合集——Amazon/Google 这类只发自家官网的岗位走这里+LinkedIn alert，不经过抓取管道。"],
     ["💾 数据与隐私", "所有数据（简历、看板、报告、Key）只存在你自己浏览器的 localStorage，不上传任何服务器。⤓ 导出JSON备份（不含Key），⤒ 导入恢复。换电脑/清缓存前记得先导出。"],
   ],
   en: [
     ["🔍 Search (lookup mode)", "Type any contiguous characters to match company, title, or location (e.g. 'veev' finds Veeva). Search bypasses all filters and time windows — it looks through your entire library including applied and rejected jobs. To check if you've applied somewhere: search the name, read the stage column."],
     ["📥 Jobs", "Auto-fetches daily from 8 open-source repos (on page load, 1h cooldown). Defaults to last 24h; filters: time window / full-time·intern / 🌱H1B-friendly / five role tags. Pre-filtered out: senior roles, TPM, citizens-only, staffing agencies, out-of-window internships."],
     ["📌 Today's Picks", "Top of Overview — scores jobs from the last 48h by your lane strategy (Ops/PjM > Growth/CRM > AI > others) plus local, H1B, and freshness bonuses. Click to edit; ↗ opens the application page."],
-    ["🗂 Pipeline", "Seven stages: saved → applied → referral asked → secured → interview → offer / rejected. Change stages via the dropdown on each row. Manually added jobs (+ button) are first-class: counted in all stats, funnels, and trends."],
+    ["🗂 Pipeline", "Eight stages: saved → applied → referral asked → secured → written test → interview → offer / rejected. Region filter (NA/China) in the filter bar. Change stages via the dropdown on each row. Manually added jobs (+ button) are first-class: counted in all stats, funnels, and trends."],
     ["🤖 Resume Lab", "Upload resumes (.md/.txt) → paste a JD (company/title auto-detected) → 🎯 pick resume for me → get a report: match score, ATS keywords, persona decode, guarded bullet rewrites, elicitation questions. Refine via chat below the report; re-test after editing. Requires your own Anthropic API key (stored in your browser only)."],
+    ["🎤 Interview Hub", "Three tools: Story Studio — bullets auto-extracted from your resumes, each polished into a ≤90s STAR story (AI reviews focus and length, never invents); Question Bank — six question types (screening/behavioral/product/analytical/company/reverse); Answer Cards — scripted answers for the four standard recruiter-screen questions."],
     ["🚄 Channels", "Official campus-recruiting portals (APM programs, design, hardware, startup platforms) — companies like Amazon/Google post only on their own sites; track them here + LinkedIn alerts."],
     ["💾 Data & Privacy", "Everything (resumes, pipeline, reports, key) lives only in your browser's localStorage — nothing is uploaded anywhere. ⤓ exports a JSON backup (key excluded); ⤒ restores it. Export before switching devices or clearing cache."],
   ],
@@ -822,6 +1183,12 @@ function JobBoard({ jobs, filter, setFilter, moveJob, requestDelete, setEditJob,
           {t.jobs} <span style={{ fontSize: 13, fontWeight: 400, color: "#B0B0BA" }}>({jobs.length})</span>
         </h2>
         <div style={{ flex: 1 }} />
+        <select value={filter.region} onChange={e => setFilter(f => ({ ...f, region: e.target.value }))}
+          style={{ padding: "8px 14px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.45)", fontSize: 12, outline: "none", color: "#5A5A6E", cursor: "pointer", backdropFilter: "blur(8px)" }}>
+          <option value="all">🌍 {t.regionAll}</option>
+          <option value="NA">{t.regionNA}</option>
+          <option value="CN">{t.regionCN}</option>
+        </select>
         <button onClick={() => setFilter(f => ({ ...f, h1bOnly: !f.h1bOnly }))} style={{
           padding: "6px 16px", borderRadius: 999, border: "none", fontSize: 11.5, fontWeight: 600,
           background: filter.h1bOnly ? "rgba(123,175,139,0.85)" : "rgba(255,255,255,0.4)",
@@ -1593,6 +1960,22 @@ function ReportCard({ entry, t, sColors, sLabel }) {
 
 // ===== Channels: 大厂直通车 =====
 const CHANNEL_DATA = [
+  { cat: { zh: "🇨🇳 国内大厂校招", en: "🇨🇳 China Campus Recruiting" }, items: [
+    { co: "字节跳动", url: "https://jobs.bytedance.com/campus", note: { zh: "2027届秋招", en: "ByteDance" }, h1b: false },
+    { co: "腾讯", url: "https://join.qq.com", note: { zh: "校招", en: "Tencent" }, h1b: false },
+    { co: "阿里巴巴", url: "https://talent.alibaba.com/campus", note: { zh: "校招", en: "Alibaba" }, h1b: false },
+    { co: "美团", url: "https://campus.meituan.com", note: { zh: "校招", en: "Meituan" }, h1b: false },
+    { co: "拼多多", url: "https://careers.pinduoduo.com", note: { zh: "校招", en: "PDD" }, h1b: false },
+    { co: "小红书", url: "https://job.xiaohongshu.com", note: { zh: "校招", en: "Xiaohongshu" }, h1b: false },
+    { co: "快手", url: "https://campus.kuaishou.cn", note: { zh: "校招", en: "Kuaishou" }, h1b: false },
+    { co: "网易", url: "https://campus.163.com", note: { zh: "校招", en: "NetEase" }, h1b: false },
+  ]},
+  { cat: { zh: "🇨🇳 国内求职聚合平台", en: "🇨🇳 China Job Aggregators" }, items: [
+    { co: "牛客网", url: "https://www.nowcoder.com", note: { zh: "笔试题+面经+内推码", en: "Tests & interviews" }, h1b: false },
+    { co: "实习僧", url: "https://www.shixiseng.com", note: { zh: "实习为主", en: "Internships" }, h1b: false },
+    { co: "应届生求职网", url: "https://www.yingjiesheng.com", note: { zh: "校招汇总", en: "NG roundup" }, h1b: false },
+    { co: "超级简历校招", url: "https://www.wondercv.com", note: { zh: "投递工具", en: "Apply tool" }, h1b: false },
+  ]},
   { cat: { zh: "PM 项目 (APM/RPM)", en: "PM Programs (APM/RPM)" }, items: [
     { co: "Google APM", url: "https://www.google.com/about/careers/applications/programs/apm", note: { zh: "9月底开放", en: "Opens late Sep" }, h1b: true },
     { co: "Meta RPM", url: "https://www.metacareers.com/rotational-programs", note: { zh: "18个月轮岗", en: "18-mo rotational" }, h1b: true },
@@ -1660,7 +2043,7 @@ function Field({ label, children }) { return <div style={{ marginBottom: 14 }}><
 
 function JobModal({ job, onSave, onDelete, onClose, t }) {
   const isEdit = !!job;
-  const [form, setForm] = useState(job || { title: "", company: "", location: "", type: "Product Manager", posted: new Date().toISOString().split("T")[0], source: "manual", url: "", stage: "saved", notes: "", referralContact: "", tags: [] });
+  const [form, setForm] = useState(job || { title: "", company: "", location: "", type: "Product Manager", posted: new Date().toISOString().split("T")[0], source: "manual", url: "", stage: "saved", notes: "", referralContact: "", tags: [], region: "NA", appliedDate: "", addedDate: new Date().toISOString().split("T")[0] });
   const [tagInput, setTagInput] = useState("");
   const addTag = () => { const v = tagInput.trim(); if (v && !form.tags.includes(v)) { setForm(f => ({ ...f, tags: [...f.tags, v] })); setTagInput(""); } };
 
@@ -1681,6 +2064,9 @@ function JobModal({ job, onSave, onDelete, onClose, t }) {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <Field label={t.typeCol}><select style={iStyle} value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}><option value="Product Manager">PM</option><option value="Product Designer">PD</option></select></Field>
+          <Field label={t.fRegion}><select style={iStyle} value={form.region || "NA"} onChange={e => setForm(f => ({ ...f, region: e.target.value }))}><option value="NA">{t.regionNA}</option><option value="CN">{t.regionCN}</option></select></Field>
+          <Field label={t.fPosted}><input type="date" style={iStyle} value={form.posted} onChange={e => setForm(f => ({ ...f, posted: e.target.value }))} /></Field>
+          <Field label={t.fApplied}><input type="date" style={iStyle} value={form.appliedDate || ""} onChange={e => setForm(f => ({ ...f, appliedDate: e.target.value }))} /></Field>
           <Field label={t.stage}><select style={iStyle} value={form.stage} onChange={e => setForm(f => ({ ...f, stage: e.target.value }))}>{STAGES.map(s => <option key={s.id} value={s.id}>{t.stages[s.id]}</option>)}</select></Field>
         </div>
         {!isEdit && <Field label={t.link}><input style={iStyle} value={form.url} onChange={e => setForm(f => ({ ...f, url: e.target.value }))} placeholder="https://..." /></Field>}
