@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-// OFFERPILOT_VERSION: v0.4.24 (fresh jobs 2026-08-28)
+// OFFERPILOT_VERSION: v0.4.25 (koi logo)
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Tooltip, CartesianGrid } from "recharts";
 
 const I18N = {
@@ -429,8 +429,30 @@ export default function OfferPilot() {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 32px" }}>
         {/* ===== Header ===== */}
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 10 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.02em", color: "#5A5A6E" }}>
-            Offer<span style={{ fontWeight: 300 }}>Pilot</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <svg width="26" height="26" viewBox="0 0 130 130" style={{ flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="opGlow" cx="0.5" cy="0.45" r="0.55">
+                  <stop offset="0" stopColor="#FFF6E6"/><stop offset="1" stopColor="#EAF1F7"/>
+                </radialGradient>
+                <linearGradient id="opBody" x1="0.3" y1="1" x2="0.6" y2="0">
+                  <stop offset="0" stopColor="#EE7A3E"/><stop offset="1" stopColor="#F9AE6E"/>
+                </linearGradient>
+              </defs>
+              <circle cx="65" cy="65" r="58" fill="url(#opGlow)"/>
+              <g stroke="#FBC97F" strokeWidth="3" strokeLinecap="round" opacity="0.55">
+                <line x1="65" y1="18" x2="65" y2="30"/><line x1="95" y1="35" x2="88" y2="43"/>
+                <line x1="35" y1="35" x2="42" y2="43"/><line x1="100" y1="65" x2="90" y2="65"/><line x1="30" y1="65" x2="40" y2="65"/>
+              </g>
+              <path d="M28 92 Q65 84 102 92" stroke="#7BA1C7" strokeWidth="3.5" fill="none" strokeLinecap="round" opacity="0.5"/>
+              <path d="M58 92 Q48 74 54 56 Q60 40 74 42 Q68 50 66 60 Q76 58 80 52 Q80 74 70 84 Q64 90 58 92 Z" fill="url(#opBody)"/>
+              <path d="M58 92 Q46 96 40 104 Q50 100 56 96 Q52 102 52 108 Q60 100 58 92 Z" fill="#F9AE6E" opacity="0.9"/>
+              <circle cx="68" cy="52" r="5" fill="#fff"/><circle cx="69" cy="53" r="2.8" fill="#2A3340"/><circle cx="70" cy="51.5" r="1.1" fill="#fff"/>
+              <circle cx="62" cy="58" r="4" fill="#FF9A6A" opacity="0.35"/>
+            </svg>
+            <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.02em", color: "#5A5A6E" }}>
+              Offer<span style={{ fontWeight: 300 }}>Pilot</span>
+            </div>
           </div>
           {/* Nav */}
           <div style={{ display: "flex", gap: 4, marginLeft: 20 }}>
