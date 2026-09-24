@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-// OFFERPILOT_VERSION: v0.4.25 (koi logo)
+// OFFERPILOT_VERSION: v0.4.26 (add-to-jobs from Resume Lab report)
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Tooltip, CartesianGrid } from "recharts";
 
 const I18N = {
@@ -67,7 +67,7 @@ const I18N = {
     aiAsks: "AI 想问你", aiAsksHint: "在下方对话框里回答，AI 会把你的补充事实织进改写",
     refineTitle: "对话微调", refineHint: "不认可某条改写？直接说。有报告没问到的经历？在这里补充，AI 会给出融合后的新版本（不超原句长度+10%）。",
     refinePlaceholder: "例如：第二条我其实还做过A/B测试... (Opt+Enter to send)", refineSend: "发送", refineThinking: "思考中...",
-    jdUrl: "投递链接（选填，会存进报告）", applyLink: "投递入口", rerun: "简历改完了，重测对比",
+    jdUrl: "投递链接（选填，会存进报告）", applyLink: "投递入口", addToJobs: "加入岗位列表", addConfirm: "再点一次确认（标为已投递）", addedToJobs: "已加入", rerun: "简历改完了，重测对比",
     atsKw: "ATS 关键词核对", kwAdd: "可以补 — 你有对应经历，融进对应bullet即可", kwCant: "补不了 — 这些是你确实没有的领域知识", kwCantNote: "不要硬塞或编造。这类词决定了你在这个岗位的关键词天花板，投递时靠其他优势取胜。", kwReach: "补齐后可达", kwHave: "已覆盖", kwNote: "分数=recruiter按关键词搜索时你的可见度，不是资格判定。硬门槛（学历/工作授权/时间）才是真正卡人的。",
     hardReqs: "硬性条件（缺了就是硬伤）", softReqs: "软性条件（特质与工作方式）",
     keyTitle: "连接你的 Anthropic API Key 以启用 AI 功能", keyHint: "Key 只保存在你自己的浏览器（localStorage），不会上传到任何服务器。在 console.anthropic.com 免费获取。没有 Key 也可以使用岗位追踪的全部功能。", keySet: "API Key 已连接（仅存本机）", keyClear: "断开",
@@ -143,7 +143,7 @@ const I18N = {
     aiAsks: "AI asks you", aiAsksHint: "Answer in the chat below — new facts get woven into revised bullets",
     refineTitle: "Refine via chat", refineHint: "Disagree with a rewrite? Say so. Have experience the report didn't ask about? Add it here — you'll get a merged version (max +10% length).",
     refinePlaceholder: "e.g. For bullet 2, I actually also ran A/B tests... (Opt+Enter to send)", refineSend: "Send", refineThinking: "Thinking...",
-    jdUrl: "Application URL (optional, saved with report)", applyLink: "Apply", rerun: "Resume updated? Re-test",
+    jdUrl: "Application URL (optional, saved with report)", applyLink: "Apply", addToJobs: "Add to jobs", addConfirm: "Tap again — marks applied", addedToJobs: "Added", rerun: "Resume updated? Re-test",
     atsKw: "ATS keyword check", kwAdd: "Can add — you have this experience, weave it into the named bullet", kwCant: "Cannot add — domain knowledge you genuinely lack", kwCantNote: "Do not fake these. They set your keyword ceiling for this role; win on other strengths instead.", kwReach: "Reachable", kwHave: "Covered", kwNote: "The score reflects recruiter keyword-search visibility, not whether you qualify. Hard requirements (degree, work authorization, timing) are what actually gate you.",
     hardReqs: "Hard requirements (dealbreakers)", softReqs: "Soft requirements (traits & ways of working)",
     keyTitle: "Connect your Anthropic API key to enable AI features", keyHint: "Stored only in your own browser (localStorage), never uploaded anywhere. Get one free at console.anthropic.com. All job-tracking features work without a key.", keySet: "API key connected (local only)", keyClear: "Disconnect",
@@ -1909,6 +1909,31 @@ function RefineChat({ entry, resume, t, lang, onUpdate }) {
 function ReportCard({ entry, t, sColors, sLabel }) {
   const r = entry.rep;
   const ring = r.match >= 70 ? "#4A8A5A" : r.match >= 50 ? "#C9A86C" : "#A04A5A";
+  const [addState, setAddState] = useState("idle"); // idle | confirm | added
+  const addToJobs = async () => {
+    if (addState === "idle") { setAddState("confirm"); setTimeout(() => setAddState(s => s === "confirm" ? "idle" : s), 3000); return; }
+    if (addState !== "confirm") return;
+    const today = new Date().toISOString().split("T")[0];
+    let __ac = Date.now();
+    const job = {
+      id: "lab-" + __ac.toString(36),
+      company: entry.company || "?", title: entry.title || "?",
+      location: "", url: entry.url || "",
+      type: "Product Manager", jobType: "fulltime",
+      posted: entry.date || today, region: "NA", source: "manual",
+      h1b: "unknown", stage: "applied", appliedDate: today,
+      tags: [], notes: "Added from Resume Lab · match " + (r.match || 0) + "%", referralContact: "",
+    };
+    try {
+      const cur = await window.storage.get("op2-data");
+      const list = cur?.value ? JSON.parse(cur.value) : [];
+      // 去重: 同公司+同职位已存在则不重复加
+      const key = (job.company + "::" + job.title).toLowerCase();
+      const exists = list.some(j => ((j.company||"") + "::" + (j.title||"")).toLowerCase() === key);
+      if (!exists) { list.unshift(job); await window.storage.set("op2-data", JSON.stringify(list)); }
+      setAddState("added");
+    } catch { setAddState("added"); }
+  };
   return (
     <Glass>
       {/* 签证扫描横幅(确定性, 扫JD原文) */}
@@ -1943,6 +1968,11 @@ function ReportCard({ entry, t, sColors, sLabel }) {
           <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <span>{entry.title} · {entry.company}</span>
             {entry.url && <a href={entry.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontWeight: 600, padding: "3px 12px", borderRadius: 999, background: "rgba(123,161,199,0.15)", color: "#5A7EA0", textDecoration: "none" }}>↗ {t.applyLink}</a>}
+            <button onClick={addToJobs} disabled={addState === "added"} style={{ fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 999, border: "none", cursor: addState === "added" ? "default" : "pointer",
+              background: addState === "added" ? "rgba(123,175,139,0.2)" : addState === "confirm" ? "rgba(155,142,196,0.9)" : "rgba(155,142,196,0.15)",
+              color: addState === "added" ? "#4A8A5A" : addState === "confirm" ? "#fff" : "#7A6EA4" }}>
+              {addState === "added" ? ("✓ " + t.addedToJobs) : addState === "confirm" ? t.addConfirm : ("➕ " + t.addToJobs)}
+            </button>
           </div>
           <div style={{ fontSize: 13, color: "#5A5A6E", lineHeight: 1.5 }}><b>{t.verdict}:</b> {r.verdict}</div>
           {r.level && <div style={{ fontSize: 12, color: "#9A9AAA", marginTop: 4 }}>{t.levelCheck}: {r.level}</div>}
