@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-// OFFERPILOT_VERSION: v0.4.26 (add-to-jobs from Resume Lab report)
+// OFFERPILOT_VERSION: v0.4.27 (merge import: id→url→company+title, rule A加强版, result summary)
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Tooltip, CartesianGrid } from "recharts";
 
 const I18N = {
@@ -62,8 +62,10 @@ const I18N = {
     ivToManual: "转为手动条目（可编辑文本）", edit: "编辑",
     back: "返回",
     regionAll: "全部地区", allStages: "全部状态", allLocations: "全部地点", regionNA: "北美", regionCN: "中国", fRegion: "地区", fPosted: "岗位发布日期", fApplied: "我的投递日期（改阶段为已投递时自动记录，可修改）",
-    menuHelp: "使用指南", resetJobs: "重置岗位数据", resetSure: "再点一次确认清空（保留简历和面试）", menuExport: "导出备份", menuImport: "导入备份",
+    menuHelp: "使用指南", resetJobs: "重置岗位数据", resetSure: "再点一次确认清空（保留简历和面试）", menuExport: "导出备份", menuImport: "覆盖导入（Restore）", menuMerge: "合并导入（Merge）",
     exportTip: "导出备份（不含API Key）", importTip: "导入备份", importOk: "导入成功，即将刷新", importBad: "文件格式不对，请选择 OfferPilot 导出的备份文件",
+    mergeDone: (a,u,s)=>`合并完成：新增 ${a} 个，补全 ${u} 个，跳过（已存在）${s} 个。即将刷新。`,
+    overwriteWarn: "覆盖导入会用备份整体替换当前数据，你在网站上手动改过的记录会被覆盖。首次迁移或从完整备份还原时才用它，日常和 Muse 协同请用「合并导入」。确定继续吗？",
     aiAsks: "AI 想问你", aiAsksHint: "在下方对话框里回答，AI 会把你的补充事实织进改写",
     refineTitle: "对话微调", refineHint: "不认可某条改写？直接说。有报告没问到的经历？在这里补充，AI 会给出融合后的新版本（不超原句长度+10%）。",
     refinePlaceholder: "例如：第二条我其实还做过A/B测试... (Opt+Enter to send)", refineSend: "发送", refineThinking: "思考中...",
@@ -138,8 +140,10 @@ const I18N = {
     ivToManual: "Convert to manual entry (editable text)", edit: "Edit",
     back: "Back",
     regionAll: "All regions", allStages: "All stages", allLocations: "All locations", regionNA: "North America", regionCN: "China", fRegion: "Region", fPosted: "Job posted date", fApplied: "My application date (auto-set when moved to Applied; editable)",
-    menuHelp: "How to use", resetJobs: "Reset job data", resetSure: "Tap again to confirm (resumes & interview kept)", menuExport: "Export backup", menuImport: "Import backup",
+    menuHelp: "How to use", resetJobs: "Reset job data", resetSure: "Tap again to confirm (resumes & interview kept)", menuExport: "Export backup", menuImport: "Overwrite import (Restore)", menuMerge: "Merge import",
     exportTip: "Export backup (API key excluded)", importTip: "Import backup", importOk: "Imported — reloading", importBad: "Invalid file — choose an OfferPilot backup",
+    mergeDone: (a,u,s)=>`Merge done: ${a} added, ${u} filled, ${s} skipped (already present). Reloading.`,
+    overwriteWarn: "Overwrite import replaces all current data with the backup — any records you edited on the site will be lost. Use it only for a first migration or a full restore; for day-to-day Muse sync use Merge import instead. Continue?",
     aiAsks: "AI asks you", aiAsksHint: "Answer in the chat below — new facts get woven into revised bullets",
     refineTitle: "Refine via chat", refineHint: "Disagree with a rewrite? Say so. Have experience the report didn't ask about? Add it here — you'll get a merged version (max +10% length).",
     refinePlaceholder: "e.g. For bullet 2, I actually also ran A/B tests... (Opt+Enter to send)", refineSend: "Send", refineThinking: "Thinking...",
@@ -159,6 +163,55 @@ const I18N = {
 
 let __uidc=0;
 function uid(prefix){return prefix+"-"+Date.now().toString(36)+"-"+(__uidc++).toString(36);}
+
+// ---- Merge import helpers ----
+// 标准化 company / title 用于兜底匹配
+function normCo(s){return String(s||"").toLowerCase().trim()
+  .replace(/,?\s*(inc|inc\.|llc|l\.l\.c\.|corp|corp\.|corporation|co\.|ltd|ltd\.|company)\s*$/,"")
+  .replace(/[^a-z0-9]+/g," ").trim();}
+function normTitle(s){return String(s||"").toLowerCase().trim()
+  .replace(/[\(\[].*?[\)\]]/g," ")                 // 去掉括号内容 (Remote) [2027]
+  .replace(/[-–|,]\s*(remote|hybrid|onsite|on-site|us|usa|wa|new grad|newgrad|2026|2027|2028|university grad|entry level|intern|full[\s-]?time).*$/g," ")
+  .replace(/\b(20\d\d)\b/g," ")                     // 去掉年份
+  .replace(/[^a-z0-9]+/g," ").trim();}
+function normUrl(s){return String(s||"").toLowerCase().trim().replace(/[?#].*$/,"").replace(/\/+$/,"");}
+// 一个已存在岗位与一条外部岗位是否是同一个：id → url → company+title
+function sameJob(a,b){
+  if(a.id&&b.id&&String(a.id)===String(b.id))return true;
+  const au=normUrl(a.url),bu=normUrl(b.url);
+  if(au&&bu&&au===bu)return true;
+  const ac=normCo(a.company),bc=normCo(b.company);
+  const at=normTitle(a.title),bt=normTitle(b.title);
+  if(ac&&bc&&at&&bt&&ac===bc&&at===bt)return true;
+  return false;
+}
+// 规则 A 加强版：网站有值的字段绝不动，只把网站为空的字段用外部数据补上
+function fillEmpty(existing,incoming){
+  const out={...existing};let touched=false;
+  for(const k of Object.keys(incoming)){
+    const cur=out[k],nv=incoming[k];
+    const empty = cur===undefined||cur===null||cur===""||(Array.isArray(cur)&&cur.length===0);
+    if(empty && !(nv===undefined||nv===null||nv===""||(Array.isArray(nv)&&nv.length===0))){out[k]=nv;touched=true;}
+  }
+  return {job:out,touched};
+}
+// 合并：返回 {jobs, added, updated, skipped}
+function mergeJobs(existing, incoming){
+  const list=existing.slice();
+  let added=0,updated=0,skipped=0;
+  for(const inc of incoming){
+    const idx=list.findIndex(e=>sameJob(e,inc));
+    if(idx<0){ // 网站里没有 → 新增
+      list.unshift({...inc, id: inc.id || uid("op")});
+      added++;
+    }else{ // 已存在 → 只补空字段
+      const {job,touched}=fillEmpty(list[idx],inc);
+      list[idx]=job;
+      if(touched)updated++;else skipped++;
+    }
+  }
+  return {jobs:list,added,updated,skipped};
+}
 const LOC_PRESETS = [
   { v: "seattle", n: "Seattle" }, { v: "bellevue", n: "Bellevue" }, { v: "redmond", n: "Redmond" },
   { v: "san francisco", n: "San Francisco" }, { v: "new york", n: "New York" }, { v: "los angeles", n: "Los Angeles" },
@@ -493,16 +546,48 @@ export default function OfferPilot() {
                   onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,0.04)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
                   ⤓ {t.menuExport}
                 </button>
+                {/* Merge：岗位增量合并（网站为最终结算地点，已有记录绝不被覆盖） */}
                 <label style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", borderRadius: 10, fontSize: 12.5, color: "#2C2C3A", cursor: "pointer", boxSizing: "border-box" }}
                   onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,0.04)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                  ⤒ {t.menuImport}
+                  ⤗ {t.menuMerge}
                   <input type="file" accept=".json" style={{ display: "none" }} onChange={async e => {
                     setShowMenu(false);
                     const f = e.target.files && e.target.files[0]; if (!f) return;
                     try {
                       const parsed = JSON.parse(await f.text());
                       if (parsed.app !== "offerpilot" || !parsed.data) { alert(t.importBad); return; }
-                      for (const [k, v] of Object.entries(parsed.data)) { try { await window.storage.set(k, v); } catch {} }
+                      // 取外部备份里的岗位
+                      let incoming = [];
+                      try { incoming = JSON.parse(parsed.data["op2-data"] || "[]"); } catch { incoming = []; }
+                      if (!Array.isArray(incoming)) incoming = [];
+                      // 取网站当前岗位
+                      let current = [];
+                      try { const r = await window.storage.get("op2-data"); current = JSON.parse(r?.value || "[]"); } catch { current = []; }
+                      if (!Array.isArray(current)) current = [];
+                      const res = mergeJobs(current, incoming);
+                      await window.storage.set("op2-data", JSON.stringify(res.jobs));
+                      // 其他数据键（简历/面试/作品集等）：仅在网站当前为空时才补，绝不覆盖
+                      for (const k of Object.keys(parsed.data)) {
+                        if (k === "op2-data" || k === "op2-apikey") continue;
+                        try { const r = await window.storage.get(k); const has = r?.value && r.value !== "[]" && r.value !== "{}"; if (!has) await window.storage.set(k, parsed.data[k]); } catch {}
+                      }
+                      alert(t.mergeDone(res.added, res.updated, res.skipped));
+                      location.reload();
+                    } catch { alert(t.importBad); }
+                  }} />
+                </label>
+                {/* Overwrite / Restore：整体覆盖（首次迁移或从完整备份还原时用） */}
+                <label style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", borderRadius: 10, fontSize: 12.5, color: "#2C2C3A", cursor: "pointer", boxSizing: "border-box" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,0.04)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                  ⤒ {t.menuImport}
+                  <input type="file" accept=".json" style={{ display: "none" }} onChange={async e => {
+                    setShowMenu(false);
+                    const f = e.target.files && e.target.files[0]; if (!f) return;
+                    if (!window.confirm(t.overwriteWarn)) { e.target.value = ""; return; }
+                    try {
+                      const parsed = JSON.parse(await f.text());
+                      if (parsed.app !== "offerpilot" || !parsed.data) { alert(t.importBad); return; }
+                      for (const [k, v] of Object.entries(parsed.data)) { if (k === "op2-apikey") continue; try { await window.storage.set(k, v); } catch {} }
                       alert(t.importOk); location.reload();
                     } catch { alert(t.importBad); }
                   }} />
